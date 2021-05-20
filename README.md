@@ -12,6 +12,6 @@ To use it on your host system, follow the steps:
 
 
 ### Example
-To run the provided example type :
+To run the provided example, type :
 
 `python ./tests/solve_example.py`
