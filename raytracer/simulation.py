@@ -108,11 +108,10 @@ class Simulation:
         for k, v in self.param.items():
             if is_num_type(v):
                 if isinstance(v, int):
-                    if(k == 'np'):
+                    if k == "np":
                         print("\t- {:<12}  {:<1.0e}".format(k, v))
-                    else :
+                    else:
                         print("\t- {:<12}  {:<12d}".format(k, v))
-                    
 
                 if isinstance(v, float):
                     print("\t- {:<12}  {:<12.6f}".format(k, v))
@@ -172,7 +171,11 @@ class Simulation:
 
     def __push_particle(self):
         gen = PhiloxGenerator(self.ocl_ctx)
-        rand_gpu = gen.uniform(self.ocl_queue, (self.np, 4), dtype=self.dtype)
+        nb_rd = 4
+        if self.dim == 2:
+            nb_rd = 3
+
+        rand_gpu = gen.uniform(self.ocl_queue, (self.np, nb_rd), dtype=self.dtype)
 
         event = self.ocl_prg.rt_push_particles(
             self.ocl_queue,
@@ -202,7 +205,7 @@ class Simulation:
         for i in range(0, 20):
             self.__push_particle()
             print("Info- iteration: {}/{} ".format(i, iter_max), end="\r")
-        
+
         print("Info- ray-tracing done")
         print("Info- dumping particles...")
         self.dump_particles()

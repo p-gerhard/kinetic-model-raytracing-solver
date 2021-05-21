@@ -3,6 +3,31 @@
 
 #define NB_FACE 6
 
+bool rt_intersect_sphere(const float3 sphere_c, const float sphere_r2,
+						 const float3 xi, const float3 vi, float *p1, float *p2)
+{
+	const float3 L = sphere_c - xi;
+	const float L_dot_v = dot(L, vi);
+
+	/* Case 1: v is not in the direction of the sphere */
+	if (L_dot_v < 0) {
+		return false;
+	}
+
+	/* Case 2: the particle is passing nexto the sphere */
+	const float d2 = dot(L, L) - L_dot_v * L_dot_v;
+	if (d2 > sphere_r2) {
+		return false;
+	}
+
+	/* Case 3: the particle collides the sphere */
+	const float half_inside_path_len = sqrt(sphere_r2 - d2);
+	*p1 = L_dot_v - half_inside_path_len;
+	*p2 = L_dot_v + half_inside_path_len;
+
+	return true;
+}
+
 bool rt_intersect_face(const float3 face_p, const float3 face_n, const float3 x,
 					   const float3 v, float *dist)
 
@@ -24,7 +49,7 @@ bool rt_intersect_face(const float3 face_p, const float3 face_n, const float3 x,
 int rt_intersect_box(const float3 x, const float3 v, float *dist_min)
 {
 	float dist = 0;
-	float dist_min_tmp = FLT_MAX;
+	float dist_min_tmp = MAXFLOAT;
 	int id_min_face;
 
 	const float3 face_p[NB_FACE] = { (float3)(BOX_X, 0, 0), (float3)(0, 0, 0),
