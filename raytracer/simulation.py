@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
 
 import meshio
 import numpy as np
@@ -161,7 +160,7 @@ class Simulation:
         # Init time
         self.t_gpu = cl_array.zeros(self.ocl_queue, self.np, dtype=self.dtype)
 
-        event = self.ocl_prg.rt_init_particles(
+        self.ocl_prg.rt_init_particles(
             self.ocl_queue,
             (self.np,),
             None,
@@ -174,7 +173,7 @@ class Simulation:
 
         rand_gpu = gen.uniform(self.ocl_queue, (self.np, 4), dtype=self.dtype)
 
-        event = self.ocl_prg.rt_push_particles(
+        self.ocl_prg.rt_push_particles(
             self.ocl_queue,
             (self.np,),
             None,
