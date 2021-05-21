@@ -15,11 +15,11 @@ if __name__ == "__main__":
 
     parameters = {
         "np": int(1e7),
-        "dim": 2,
+        "dim": 3,
         "box_x": 1,
         "box_y": 1,
         "box_z": 1,
-        "tmax": 10,
+        "tmax": 0.7,
         "src_x": 0.5,
         "src_y": 0.5,
         "src_z": 0.5,
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         "rcp_r": 0.5,
         "rcp_z": 0.5,
         "alpha": 1.0,
-        "beta": 0.5,
+        "beta": 0.0,
     }
 
     simu = Simulation(parameters)

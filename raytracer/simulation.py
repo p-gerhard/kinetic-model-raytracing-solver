@@ -112,12 +112,13 @@ class Simulation:
                         print("\t- {:<12}  {:<1.0e}".format(k, v))
                     else:
                         print("\t- {:<12}  {:<12d}".format(k, v))
+                    src = src.replace("_{}_".format(k), "({})".format(v))
 
                 if isinstance(v, float):
                     print("\t- {:<12}  {:<12.6f}".format(k, v))
-
+                    src = src.replace("_{}_".format(k), "({}f)".format(v))
                 # Inject parameters inside OpenCL source file
-                src = src.replace("_{}_".format(k), "({})".format(v))
+                
 
         if print_src:
             print(src)
@@ -171,11 +172,8 @@ class Simulation:
 
     def __push_particle(self):
         gen = PhiloxGenerator(self.ocl_ctx)
-        nb_rd = 4
-        if self.dim == 2:
-            nb_rd = 3
 
-        rand_gpu = gen.uniform(self.ocl_queue, (self.np, nb_rd), dtype=self.dtype)
+        rand_gpu = gen.uniform(self.ocl_queue, (self.np, 4), dtype=self.dtype)
 
         event = self.ocl_prg.rt_push_particles(
             self.ocl_queue,

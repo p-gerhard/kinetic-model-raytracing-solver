@@ -84,8 +84,8 @@ int rt_intersect_box(const float3 x, const float3 v, float *dist_min)
 	return id_min_face;
 }
 
-static float3 rt_update_velocity(const int id_face, const float rd_beta,
-								 const float rd_theta, const float rd_phi,
+static float3 rt_update_velocity(const int id_face, const float rd_bt,
+								 const float rd_th, const float rd_ph,
 								 const float3 vi)
 {
 	float3 v_new;
@@ -113,19 +113,23 @@ static float3 rt_update_velocity(const int id_face, const float rd_beta,
 	/* Tangential vector t1 */
 	const float3 face_t1[NB_FACES] = { (float3)(0, 1, 0), (float3)(0, -1, 0),
 									   (float3)(-1, 0, 0), (float3)(1, 0, 0) };
+
+	/* Tangential vector t2 */
+	const float3 face_t2[NB_FACES] = { (float3)(0, 0, 1), (float3)(0, 0, 1),
+									   (float3)(0, 0, 1), (float3)(0, 0, 1) };
 #endif
 
-	if (rd_beta < 0) {
+	if (rd_bt < 0) {
 		/* Specular rebound */
 		v_new = vi - 2.f * dot(vi, face_n[id_face]) * face_n[id_face];
 
 		/* Diffuse rebound (sinus sampling) */
 	} else {
-		const float sin_th = sqrt(rd_theta);
+		const float sin_th = sqrt(rd_th);
 		const float cos_th = sqrt(1.f - sin_th * sin_th);
 
 #ifdef IS_3D
-		const float phi = 2.f * M_PI * rd_phi;
+		const float phi = 2.f * M_PI * rd_ph;
 		const float cos_ph = cos(phi);
 		const float sin_ph = sin(phi);
 
@@ -135,8 +139,9 @@ static float3 rt_update_velocity(const int id_face, const float rd_beta,
 
 		v_new = v1 + v2 + v3;
 #else
+		const int sgn = (rd_ph < 0.5f) ? 1 : -1;
 		const float3 v1 = cos_th * -face_n[id_face];
-		const float3 v2 = sin_th * face_t1[id_face];
+		const float3 v2 = sin_th * sgn * face_t1[id_face];
 		v_new = v1 + v2;
 #endif
 	}

@@ -61,7 +61,6 @@ __kernel void rt_init_particles(__global float *x, __global float *v)
 	float3 vn = normalize(vi);
 	v[DIM * id_part + 0] = vn.x;
 	v[DIM * id_part + 1] = vn.y;
-
 #ifdef IS_3D
 	v[DIM * id_part + 2] = vn.z;
 #else
@@ -97,12 +96,8 @@ __kernel void rt_push_particles(__global const float *rand, __global float *x,
 		const float rd_al = fmin(fmax(a, rand[NB_RANDOM * id_part + 0]), b);
 		const float rd_bt = fmin(fmax(a, rand[NB_RANDOM * id_part + 1]), b);
 		const float rd_th = fmin(fmax(a, rand[NB_RANDOM * id_part + 2]), b);
-
-#ifdef IS_3D
 		const float rd_ph = fmin(fmax(a, rand[NB_RANDOM * id_part + 3]), b);
-#else
-		const float rd_ph = 0.f;
-#endif
+
 		rt_push_one_particle(rd_al, rd_bt, rd_th, rd_ph, &xi, &vi, &ti);
 
 		/* Update global data */
