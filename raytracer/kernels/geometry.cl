@@ -1,8 +1,6 @@
 #ifndef GEOMETRY_CL
 #define GEOMETRY_CL
 
-#define NB_FACE 6
-
 bool rt_intersect_sphere(const float3 sphere_c, const float sphere_r2,
 						 const float3 xi, const float3 vi, float *p1, float *p2)
 {
@@ -52,17 +50,27 @@ int rt_intersect_box(const float3 x, const float3 v, float *dist_min)
 	float dist_min_tmp = MAXFLOAT;
 	int id_min_face;
 
-	const float3 face_p[NB_FACE] = { (float3)(BOX_X, 0, 0), (float3)(0, 0, 0),
-									 (float3)(0, BOX_Y, 0), (float3)(0, 0, 0),
-									 (float3)(0, 0, BOX_Z), (float3)(0, 0, 0) };
+#ifdef IS_3D
+	const float3 face_p[NB_FACES] = {
+		(float3)(BOX_X, 0, 0), (float3)(0, 0, 0),	  (float3)(0, BOX_Y, 0),
+		(float3)(0, 0, 0),	   (float3)(0, 0, BOX_Z), (float3)(0, 0, 0)
+	};
 
-	const float3 face_n[NB_FACE] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
-									 (float3)(0, 1, 0), (float3)(0, -1, 0),
-									 (float3)(0, 0, 1), (float3)(0, 0, -1) };
+	const float3 face_n[NB_FACES] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
+									  (float3)(0, 1, 0), (float3)(0, -1, 0),
+									  (float3)(0, 0, 1), (float3)(0, 0, -1) };
+#else
+	const float3 face_p[NB_FACES] = { (float3)(BOX_X, 0, 0), (float3)(0, 0, 0),
+									  (float3)(0, BOX_Y, 0),
+									  (float3)(0, 0, 0) };
+
+	const float3 face_n[NB_FACES] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
+									  (float3)(0, 1, 0), (float3)(0, -1, 0) };
+#endif
 
 /* Loop over all edges of the box */
 #pragma unroll
-	for (unsigned int id_face = 0; id_face < NB_FACE; id_face++) {
+	for (unsigned int id_face = 0; id_face < NB_FACES; id_face++) {
 		if (rt_intersect_face(face_p[id_face], face_n[id_face], x, v, &dist)) {
 			if (dist < dist_min_tmp) {
 				dist_min_tmp = dist;
@@ -82,20 +90,30 @@ static float3 rt_update_velocity(const int id_face, const float rd_beta,
 {
 	float3 v_new;
 
+#ifdef IS_3D
 	/* Normal vector to the face n = t1 x t2 */
-	const float3 face_n[NB_FACE] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
-									 (float3)(0, 1, 0), (float3)(0, -1, 0),
-									 (float3)(0, 0, 1), (float3)(0, 0, -1) };
+	const float3 face_n[NB_FACES] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
+									  (float3)(0, 1, 0), (float3)(0, -1, 0),
+									  (float3)(0, 0, 1), (float3)(0, 0, -1) };
 
 	/* Tangential vector t1 */
-	const float3 face_t1[NB_FACE] = { (float3)(0, 1, 0),  (float3)(0, -1, 0),
-									  (float3)(-1, 0, 0), (float3)(1, 0, 0),
-									  (float3)(1, 0, 0),  (float3)(1, 0, 0) };
+	const float3 face_t1[NB_FACES] = { (float3)(0, 1, 0),  (float3)(0, -1, 0),
+									   (float3)(-1, 0, 0), (float3)(1, 0, 0),
+									   (float3)(1, 0, 0),  (float3)(1, 0, 0) };
 
 	/* Tangential vector t2 */
-	const float3 face_t2[NB_FACE] = { (float3)(0, 0, 1), (float3)(0, 0, 1),
-									  (float3)(0, 0, 1), (float3)(0, 0, 1),
+	const float3 face_t2[NB_FACES] = { (float3)(0, 0, 1), (float3)(0, 0, 1),
+									   (float3)(0, 0, 1), (float3)(0, 0, 1),
+									   (float3)(0, 1, 0), (float3)(0, -1, 0) };
+#else
+	/* Normal vector to the face n = t1 x t2 */
+	const float3 face_n[NB_FACES] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
 									  (float3)(0, 1, 0), (float3)(0, -1, 0) };
+
+	/* Tangential vector t1 */
+	const float3 face_t1[NB_FACES] = { (float3)(0, 1, 0), (float3)(0, -1, 0),
+									   (float3)(-1, 0, 0), (float3)(1, 0, 0) };
+#endif
 
 	if (rd_beta < 0) {
 		/* Specular rebound */
@@ -106,6 +124,7 @@ static float3 rt_update_velocity(const int id_face, const float rd_beta,
 		const float sin_th = sqrt(rd_theta);
 		const float cos_th = sqrt(1.f - sin_th * sin_th);
 
+#ifdef IS_3D
 		const float phi = 2.f * M_PI * rd_phi;
 		const float cos_ph = cos(phi);
 		const float sin_ph = sin(phi);
@@ -115,6 +134,11 @@ static float3 rt_update_velocity(const int id_face, const float rd_beta,
 		const float3 v3 = sin_th * sin_ph * face_t2[id_face];
 
 		v_new = v1 + v2 + v3;
+#else
+		const float3 v1 = cos_th * -face_n[id_face];
+		const float3 v2 = sin_th * face_t1[id_face];
+		v_new = v1 + v2;
+#endif
 	}
 	return v_new;
 }

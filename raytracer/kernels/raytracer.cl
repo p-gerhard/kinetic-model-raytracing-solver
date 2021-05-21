@@ -8,7 +8,12 @@
 #define DIM _dim_
 
 #if (DIM == 3)
+#define NB_FACES 6
+#define NB_RANDOM 4
 #define IS_3D
+#else
+#define NB_FACES 4
+#define NB_RANDOM 3
 #endif
 
 #define BOX_X _box_x_
@@ -50,7 +55,7 @@ __kernel void rt_init_particles(__global float *x, __global float *v)
 	float3 vi = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1],
 						 v[DIM * id_part + 2]);
 #else
-	float3 vi = (float2)(v[DIM * id_part + 0], v[DIM * id_part + 1], 0.f);
+	float3 vi = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1], 0.f);
 #endif
 
 	float3 vn = normalize(vi);
@@ -85,13 +90,19 @@ __kernel void rt_push_particles(__global const float *rand, __global float *x,
 		float3 vi = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1], 0.f);
 #endif
 
-		/* Local copy of random numbers (in [eps, 1-eps[) */
-		const float eps = 1e-5f;
-		const float rd_al = fmin(fmax(eps, rand[4 * id_part + 0]), 1.f - eps);
-		const float rd_bt = fmin(fmax(eps, rand[4 * id_part + 1]), 1.f - eps);
-		const float rd_th = fmin(fmax(eps, rand[4 * id_part + 2]), 1.f - eps);
-		const float rd_ph = fmin(fmax(eps, rand[4 * id_part + 3]), 1.f - eps);
+		/* Local copy of random numbers (in [a, b[) */
+		const float a = 1e-5f;
+		const float b = 1.f - a;
 
+		const float rd_al = fmin(fmax(a, rand[NB_RANDOM * id_part + 0]), b);
+		const float rd_bt = fmin(fmax(a, rand[NB_RANDOM * id_part + 1]), b);
+		const float rd_th = fmin(fmax(a, rand[NB_RANDOM * id_part + 2]), b);
+
+#ifdef IS_3D
+		const float rd_ph = fmin(fmax(a, rand[NB_RANDOM * id_part + 3]), b);
+#else
+		const float rd_ph = 0.f;
+#endif
 		rt_push_one_particle(rd_al, rd_bt, rd_th, rd_ph, &xi, &vi, &ti);
 
 		/* Update global data */

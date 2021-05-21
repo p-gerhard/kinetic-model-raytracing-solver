@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     parameters = {
         "np": int(1e7),
-        "dim": 3,
+        "dim": 2,
         "box_x": 1,
         "box_y": 1,
         "box_z": 1,
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         "rcp_y": 0.5,
         "rcp_r": 0.5,
         "rcp_z": 0.5,
-        "alpha": 0.5,
+        "alpha": 1.0,
         "beta": 0.5,
     }
 
