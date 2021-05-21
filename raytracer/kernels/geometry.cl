@@ -174,7 +174,7 @@ static float3 rt_update_velocity(const int id_face, const float rd_bt,
 /*
  * Transport one particle to next collision point. If the life time ti>TMAX we
  * kill the particle setting its life time ti at -1. The absorption (alpha) on 
- * the boundary is controlled through the random number (rd_al \in [0, 1]). 
+ * the boundary is controlled through the random number (rd_al in [0, 1]). 
  * If the particle, it s position stays on the boundary and its life time is 
  * set at -1. In any other case, the particle position is update on 
  * the new boundary and the velocity vector updated.

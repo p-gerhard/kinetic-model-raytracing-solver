@@ -3,7 +3,6 @@
 
 import os
 import sys
-from random import seed
 
 import meshio
 import numpy as np
@@ -11,7 +10,7 @@ import pyopencl as cl
 import pyopencl.array as cl_array
 from pyopencl.clrandom import PhiloxGenerator
 
-
+# Check that all req_param entries are inside input_param.
 def check_parameters(req_param, input_param):
     is_missing = False
 
@@ -28,10 +27,12 @@ def check_parameters(req_param, input_param):
         exit()
 
 
+# Check if val is numeric (int or float).
 def is_num_type(val):
     return isinstance(val, int) or isinstance(val, float)
 
 
+# Return val only if its type is type_to_check, else throw and TypeError.
 def safe_assign(key, val, type_to_check):
 
     if type_to_check == int:
@@ -117,7 +118,6 @@ class Simulation:
                 if isinstance(v, float):
                     print("\t- {:<12}  {:<12.6f}".format(k, v))
                     src = src.replace("_{}_".format(k), "({}f)".format(v))
-                # Inject parameters inside OpenCL source file
 
         if print_src:
             print(src)
@@ -142,7 +142,7 @@ class Simulation:
 
     def __init_particle(self):
         print("Info- init particles")
-        gen = PhiloxGenerator(self.ocl_ctx, seed=seed())
+        gen = PhiloxGenerator(self.ocl_ctx)
 
         self.x_gpu = cl_array.empty(
             self.ocl_queue, self.dim * self.np, dtype=self.dtype
@@ -185,7 +185,7 @@ class Simulation:
         ).wait()
 
     def dump_particles(self):
-        # Copy GPU to CPU
+        # Copy position array from GPU to CPU
         points = self.x_gpu.get().reshape((self.np, self.dim))
         cells = {"vertex": self.cells}
         # This field is usefull to setup energy
