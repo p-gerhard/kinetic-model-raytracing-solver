@@ -59,7 +59,7 @@ class Simulation:
         self.__set_parameters(parameters)
 
         self.dtype = np.float32
-        self.source = self.__process_ocl_src(print_src=True)
+        self.source = self.__process_ocl_src(print_src=False)
         self.xdmf_filename = "particle.xdmf"
 
     def __set_parameters(self, param):
@@ -108,7 +108,12 @@ class Simulation:
         for k, v in self.param.items():
             if is_num_type(v):
                 if isinstance(v, int):
-                    print("\t- {:<12}  {:<12d}".format(k, v))
+                    if(k == 'np'):
+                        print("\t- {:<12}  {:<1.0e}".format(k, v))
+                    else :
+                        print("\t- {:<12}  {:<12d}".format(k, v))
+                    
+
                 if isinstance(v, float):
                     print("\t- {:<12}  {:<12.6f}".format(k, v))
 
@@ -133,8 +138,8 @@ class Simulation:
             options=self.ocl_options
         )
 
-        self.ocl_properties = cl.command_queue_properties.PROFILING_ENABLE
-        self.ocl_queue = cl.CommandQueue(self.ocl_ctx, properties=self.ocl_properties)
+        self.ocl_prop = cl.command_queue_properties.PROFILING_ENABLE
+        self.ocl_queue = cl.CommandQueue(self.ocl_ctx, properties=self.ocl_prop)
 
     def __init_particle(self):
         print("Info- init particles")
@@ -193,9 +198,12 @@ class Simulation:
         self.__build_and_setup_ocl()
         self.__init_particle()
 
+        iter_max = 20
         for i in range(0, 20):
             self.__push_particle()
-            print("info- iteration\r ", i)
-
+            print("Info- iteration: {}/{} ".format(i, iter_max), end="\r")
+        
+        print("Info- ray-tracing done")
+        print("Info- dumping particles...")
         self.dump_particles()
-        print("Info- job done.")
+        print("Info- particles dumped in file: {}".format(self.xdmf_filename))

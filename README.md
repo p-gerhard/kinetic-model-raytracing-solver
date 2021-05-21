@@ -13,5 +13,6 @@ To use it on your host system, follow the steps:
 
 ### Example
 To run the provided example, type :
+1. `cd tests`
 
-`python ./tests/solve_example.py`
+2. `python ./solve_example.py`

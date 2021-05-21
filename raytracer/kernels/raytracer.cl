@@ -69,44 +69,43 @@ __kernel void rt_push_particles(__global const float *rand, __global float *x,
 {
 	int id_part = get_global_id(0);
 
-	float t_i = t[id_part];
+	float ti = t[id_part];
 
-	if (isgreaterequal(t_i, 0.f)) {
+	if (isgreaterequal(ti, 0.f)) {
 /* Local copy of particle's data */
 #ifdef IS_3D
-		float3 x_i = (float3)(x[DIM * id_part + 0], x[DIM * id_part + 1],
-							  x[DIM * id_part + 2]);
+		float3 xi = (float3)(x[DIM * id_part + 0], x[DIM * id_part + 1],
+							 x[DIM * id_part + 2]);
 
-		float3 v_i = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1],
-							  v[DIM * id_part + 2]);
+		float3 vi = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1],
+							 v[DIM * id_part + 2]);
 
 #else
-		float3 x_i = (float3)(x[DIM * id_part + 0], x[DIM * id_part + 1], 0.f);
-		float3 v_i = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1], 0.f);
+		float3 xi = (float3)(x[DIM * id_part + 0], x[DIM * id_part + 1], 0.f);
+		float3 vi = (float3)(v[DIM * id_part + 0], v[DIM * id_part + 1], 0.f);
 #endif
 
+		/* Local copy of random numbers (in [eps, 1-eps[) */
 		const float eps = 1e-5f;
-
-		/* Local copy of random number (in [eps, 1-eps[) */
 		const float rd_al = fmin(fmax(eps, rand[4 * id_part + 0]), 1.f - eps);
 		const float rd_bt = fmin(fmax(eps, rand[4 * id_part + 1]), 1.f - eps);
 		const float rd_th = fmin(fmax(eps, rand[4 * id_part + 2]), 1.f - eps);
 		const float rd_ph = fmin(fmax(eps, rand[4 * id_part + 3]), 1.f - eps);
 
-		rt_push_one_particle(rd_al, rd_bt, rd_th, rd_ph, &x_i, &v_i, &t_i);
+		rt_push_one_particle(rd_al, rd_bt, rd_th, rd_ph, &xi, &vi, &ti);
 
 		/* Update global data */
-		x[DIM * id_part + 0] = x_i.x;
-		x[DIM * id_part + 1] = x_i.y;
+		x[DIM * id_part + 0] = xi.x;
+		x[DIM * id_part + 1] = xi.y;
 
-		v[DIM * id_part + 0] = v_i.x;
-		v[DIM * id_part + 1] = v_i.y;
+		v[DIM * id_part + 0] = vi.x;
+		v[DIM * id_part + 1] = vi.y;
 
 #ifdef IS_3D
-		x[DIM * id_part + 2] = x_i.z;
-		v[DIM * id_part + 2] = v_i.z;
+		x[DIM * id_part + 2] = xi.z;
+		v[DIM * id_part + 2] = vi.z;
 #endif
-		t[id_part] = t_i;
+		t[id_part] = ti;
 	}
 }
 #endif

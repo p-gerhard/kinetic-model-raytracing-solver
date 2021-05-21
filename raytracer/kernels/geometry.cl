@@ -103,14 +103,30 @@ void rt_push_one_particle(const float rd_al, const float rd_bt,
 
 	float t_new = *ti + dist;
 	float3 xi_old = *xi;
-	if (isgreaterequal(t_new, TMAX)) {
-		*xi += (TMAX - *ti) * (*vi);
-		/* Set negative time to kill the particle */
-		*ti = -1;
-	} else {
-		*ti = t_new;
-		*xi += dist * (*vi);
+
+	if (isless(t_new, TMAX)) {
+		/* Case 1: next even is a collision with a boundary */
+		*xi = *xi + dist * (*vi);
+
+		if (rd_al > ALPHA) {
+			/* Particle is absorbed */
+			*ti = -1.f;
+		} else {
+			/* Updated of particle's veloctiy and lifetime */
+			(*ti) = t_new;
+			(*vi) = rt_update_velocity(id_face, rd_bt, rd_th, rd_ph, *vi);
+		}
+
 		(*vi) = rt_update_velocity(id_face, rd_bt, rd_th, rd_ph, *vi);
+
+		if (rd_al > ALPHA) {
+		}
+
+	} else {
+		/* Case 2: next even is NOT a collision with a boundary */
+		*xi = *xi + (TMAX - *ti) * (*vi);
+		/* Kill the particle using negative life time*/
+		*ti = -1.f;
 	}
 }
 #endif
