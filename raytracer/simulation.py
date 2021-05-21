@@ -118,7 +118,6 @@ class Simulation:
                     print("\t- {:<12}  {:<12.6f}".format(k, v))
                     src = src.replace("_{}_".format(k), "({}f)".format(v))
                 # Inject parameters inside OpenCL source file
-                
 
         if print_src:
             print(src)

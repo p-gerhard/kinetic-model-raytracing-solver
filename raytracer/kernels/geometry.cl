@@ -1,6 +1,10 @@
 #ifndef GEOMETRY_CL
 #define GEOMETRY_CL
 
+/*
+ * Compute the intersections points p1 (entrance) p2 (exit) between a ray of 
+ * parameters (xi, vi) and a spere of parameters (sphere_c, sphere_r2). 
+ */
 bool rt_intersect_sphere(const float3 sphere_c, const float sphere_r2,
 						 const float3 xi, const float3 vi, float *p1, float *p2)
 {
@@ -26,17 +30,21 @@ bool rt_intersect_sphere(const float3 sphere_c, const float sphere_r2,
 	return true;
 }
 
-bool rt_intersect_face(const float3 face_p, const float3 face_n, const float3 x,
-					   const float3 v, float *dist)
+/*
+ * Compute the distance (dist) between a ray of parameters (xi, vi) and the 
+ * intersection point in the plane of parameters (face_p, face_n). 
+ */
+bool rt_intersect_face(const float3 face_p, const float3 face_n,
+					   const float3 xi, const float3 vi, float *dist)
 
 {
 	/* Avoid pure parallel case */
 	float tol = 1e-6f;
-	float n_dot_v = dot(face_n, v);
+	float n_dot_vi = dot(face_n, vi);
 
-	if (n_dot_v > tol) {
-		const float3 u = face_p - x;
-		*dist = dot(u, face_n) / n_dot_v;
+	if (n_dot_vi > tol) {
+		const float3 u = face_p - xi;
+		*dist = dot(u, face_n) / n_dot_vi;
 		/* Avoid collision in -v direction */
 		return (*dist >= 0.f);
 	}
@@ -44,6 +52,10 @@ bool rt_intersect_face(const float3 face_p, const float3 face_n, const float3 x,
 	return false;
 }
 
+/*
+ * Compute the minimal distance (dist_min) and on which face of the box
+ * (id_face) the next collision will occur. 
+ */
 int rt_intersect_box(const float3 x, const float3 v, float *dist_min)
 {
 	float dist = 0;
@@ -51,24 +63,28 @@ int rt_intersect_box(const float3 x, const float3 v, float *dist_min)
 	int id_min_face;
 
 #ifdef IS_3D
+	/* Point that belong to the face */
 	const float3 face_p[NB_FACES] = {
 		(float3)(BOX_X, 0, 0), (float3)(0, 0, 0),	  (float3)(0, BOX_Y, 0),
 		(float3)(0, 0, 0),	   (float3)(0, 0, BOX_Z), (float3)(0, 0, 0)
 	};
 
+	/* Outgoing normal vector to the face */
 	const float3 face_n[NB_FACES] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
 									  (float3)(0, 1, 0), (float3)(0, -1, 0),
 									  (float3)(0, 0, 1), (float3)(0, 0, -1) };
 #else
+	/* Point that belong to the face */
 	const float3 face_p[NB_FACES] = { (float3)(BOX_X, 0, 0), (float3)(0, 0, 0),
 									  (float3)(0, BOX_Y, 0),
 									  (float3)(0, 0, 0) };
 
+	/* Outgoing normal vector to the face */
 	const float3 face_n[NB_FACES] = { (float3)(1, 0, 0), (float3)(-1, 0, 0),
 									  (float3)(0, 1, 0), (float3)(0, -1, 0) };
 #endif
 
-/* Loop over all edges of the box */
+/* Loop over all boundaries of the box */
 #pragma unroll
 	for (unsigned int id_face = 0; id_face < NB_FACES; id_face++) {
 		if (rt_intersect_face(face_p[id_face], face_n[id_face], x, v, &dist)) {
@@ -84,6 +100,13 @@ int rt_intersect_box(const float3 x, const float3 v, float *dist_min)
 	return id_min_face;
 }
 
+/*
+ * Update the velocity vector vi in function to the rebound type.The type of 
+ * collision (specular/diffuse) is choosen using the random number
+ * rd_but. If the collision is diffuse we use rd_th and rd_ph to set a new 
+ * direction for the particule. The direction is choosen uniformly on the interior 
+ * half-sphere/circle on the considered boundary point. 
+ */
 static float3 rt_update_velocity(const int id_face, const float rd_bt,
 								 const float rd_th, const float rd_ph,
 								 const float3 vi)
@@ -148,6 +171,14 @@ static float3 rt_update_velocity(const int id_face, const float rd_bt,
 	return v_new;
 }
 
+/*
+ * Transport one particle to next collision point. If the life time ti>TMAX we
+ * kill the particle setting its life time ti at -1. The absorption (alpha) on 
+ * the boundary is controlled through the random number (rd_al \in [0, 1]). 
+ * If the particle, it s position stays on the boundary and its life time is 
+ * set at -1. In any other case, the particle position is update on 
+ * the new boundary and the velocity vector updated.
+ */
 void rt_push_one_particle(const float rd_al, const float rd_bt,
 						  const float rd_th, const float rd_ph, float3 *xi,
 						  float3 *vi, float *ti)

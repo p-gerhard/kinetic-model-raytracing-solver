@@ -39,6 +39,10 @@
 
 #include "geometry.cl"
 
+/*
+ * Particles initialization kernel. For each particle (global_id) we set initial 
+ * positionx = (SRC_X, SRC_Y, SRC_Z) and initial velocity using a normal law. 
+ */
 __kernel void rt_init_particles(__global float *x, __global float *v)
 {
 	int id_part = get_global_id(0);
@@ -68,6 +72,12 @@ __kernel void rt_init_particles(__global float *x, __global float *v)
 #endif
 }
 
+/*
+ * Particles transport kernel. For each particle (global_id) we compute the next
+ * event parameters (collision with a boundary), transport the particles if
+ * its life time ti is inferior than TMAX. We finally change its direction 
+ * according to the rebound law (using uniform random number).
+ */
 __kernel void rt_push_particles(__global const float *rand, __global float *x,
 								__global float *v, __global float *t)
 {
