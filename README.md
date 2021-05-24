@@ -1,4 +1,4 @@
-# Kinetic-ray-tracer
+# Kinetic-model-raytracing-solver
 Solving the linear kinetic transport equation in cubic geometries with a Monte-Carlo (MC) ray 
 tracing method on GPU. The code deals with absorbant (`alpha` coefficient), diffuse, and specular (`beta` and `1-beta` coefficients) boundary conditions.
 The Monte-Carlo algorithm is event based. At each iteration we transport the particles from one boundary to the other. 
